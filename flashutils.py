@@ -30,15 +30,51 @@ class Bootloader:
         self.f = Ftdi()
         self.f.usb_open(0x0403, 0x6001)
         self.f.usb_reset()
+
         self.f.set_baudrate(38400)
         self.f.set_line_property(NONE, STOP_BIT_1, BITS_8)
         self.f.usb_purge_buffers()
         self.f.setrts(1)
+        self.f.setflowctrl(SIO_RTS_CTS_HS)
+        self.f.setrts(0)
 
         self.mac_region    = range(0x00000030, 0x00000038)
         self.lic_region    = range(0x00000038, 0x00000048)
         self.mac, self.lic = None, None
         self.isverbose     = None
+
+        self.select_flash()
+
+    def select_flash(self):
+        self.identify_flash()
+        assert self.flash_jennicid in (0x00, 0x01, 0x02), "unsupported flash type"
+        status = self.talk(0x2C, 0x2D, data = [self.flash_jennicid])[0]
+        assert status == 0, "could not select detected flash type was: %d"%status
+
+    def identify_flash(self):
+        flash = self.talk(0x25, 0x26)
+        self.flash_status       = flash[0]
+        self.flash_manufacturer = flash[1]
+        self.flash_type         = flash[2]
+
+        assert self.flash_status == 0, "flash status != 0"
+
+        if self.flash_manufacturer == 0x10 and self.flash_type == 0x10:
+            self.flash_manufacturer = "ST"
+            self.flash_type         = "M25P10-A"
+            self.flash_jennicid     = 0x00
+        elif self.flash_manufacturer == 0xBF and self.flash_type == 0x49:
+            self.flash_manufacturer = "SST"
+            self.flash_type         = "25VF010A"
+            self.flash_jennicid     = 0x01
+        elif self.flash_manufacturer == 0x1f and self.flash_type == 0x60:
+            self.flash_manufacturer = "Atmel"
+            self.flash_type         = "25F512"
+            self.flash_jennicid     = 0x02
+        else:
+            self.flash_manufacturer = "unknown"
+            self.flash_type         = "unknown"
+            self.flash_jennicid     = 0xFF
 
     def verbose(self):
         self.isverbose = True
@@ -73,10 +109,12 @@ class Bootloader:
 
     def talk(self, type, ans_type, addr=None, mlen=None, data=None):
         """ executes one speak-reply cycle
-        type is message type sent to the chip
-        *args is a list of optional arguments to the message
-        ans is the anticipated answer type, if None returns immediatly after the message
-        has been sent.
+
+        type     msg type prefix
+        ans_type anticipiated reply type prefix
+        addr     flash address for types supporting it
+        mlen     number of bytes read from addr to addr+mlen
+        data     array containing data to be sent
 
         throws an exception if the answer type is not the anticipiated one
         """
@@ -132,33 +170,34 @@ class Bootloader:
             ans_len = 0
             ans     = cArray(1)
 
-            # send two times
-            self.f.write_data(msg, msg_len)
+            # send the message until there is an answer
+            while ans_len == 0:
+                waited = 0
+                self.f.write_data(msg, msg_len)
 
-            for i in (1,):
-                while ans_len == 0:
+                # wait some cycles until the message will be repeated
+                while waited < 150 and ans_len == 0:
                     ans_len = self.f.read_data(ans, 1)
+                    waited  += 1
 
-                # okay we received the first byte of the answer,
-                # which contains the length of the answer
-                ans_len = ans[0]
-                ans     = cArray(ans_len)
+            # okay we received the first byte of the answer,
+            # which contains the length of the answer
+            ans_len = ans[0]
+            ans     = cArray(ans_len)
 
-                # now read the answer
-                read_len = self.f.read_data(ans, ans_len)
-                assert read_len == ans_len, "%i != %i" % (read_len, ans_len)
-                assert ans[0] == ans_type, "recvd: 0x%x, anticipiated: 0x%x" %( ans[0], ans_type )
+            # now read the answer
+            read_len = self.f.read_data(ans, ans_len)
+            assert read_len == ans_len, "%i != %i" % (read_len, ans_len)
+            assert ans[0] == ans_type, "recvd: 0x%x, anticipiated: 0x%x" %( ans[0], ans_type )
 
-                arr = []
-                for i in range(1, ans_len-1): # skip length and crc field
-                    arr.append( ans[i] )
-                ans_len=0
-
+            arr = []
+            for i in range(1, ans_len-1): # skip length and crc field
+                arr.append( ans[i] )
+            ans_len=0
 
             return arr
-
         else:
-                self.f.write_data(msg, msg_len)
+            self.f.write_data(msg, msg_len)
 
     def erase_flash(self):
         """ read mac and license key prior to erasing

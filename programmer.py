@@ -31,6 +31,7 @@ if options.verbose:
 # Select the actions:
 #
 if options.show or options.erase:
+    stdout.write("flash: %s %s\n"%(bl.flash_manufacturer, bl.flash_type))
     stdout.write("mac: 0x")
     for b in bl.read_mac():
         stdout.write("%02x"%b)
