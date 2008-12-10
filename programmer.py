@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flashutils import *
 from optparse import *
 from sys import stdout, stderr
@@ -94,3 +96,4 @@ else:
 
     bl.write_mac()
     bl.write_license()
+    bl.finish()

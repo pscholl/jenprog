@@ -28,12 +28,23 @@ class Ftdi:
 class Bootloader:
     def __init__(self):
         self.f = Ftdi()
-        self.f.usb_open(0x0403, 0x6001)
-        self.f.usb_reset()
+        try:
+            # Jennics usb2serial cable
+            self.f.usb_open(0x0403, 0x6001)
+            self.doreset = 0
+        except:
+            # Teco usbbridge
+            self.f.usb_open(0x0403, 0xcc40)
+            self.enterprogrammingmode()
+            self.doreset = 1
 
+        self.f.usb_reset()
+        self.f.usb_purge_buffers()
+        self.f.usb_purge_buffers()
+        crap = cArray(1024)
+        self.f.read_data(crap, 1024)
         self.f.set_baudrate(38400)
         self.f.set_line_property(NONE, STOP_BIT_1, BITS_8)
-        self.f.usb_purge_buffers()
         self.f.setrts(1)
         self.f.setflowctrl(SIO_RTS_CTS_HS)
         self.f.setrts(0)
@@ -75,6 +86,28 @@ class Bootloader:
             self.flash_manufacturer = "unknown"
             self.flash_type         = "unknown"
             self.flash_jennicid     = 0xFF
+
+    def enterprogrammingmode(self):
+        """ uses bitbang mode to set DSR,DTR lines which are connected to the
+        reset and programming pin on the jennic board.
+        See http://www.ftdichip.com/Documents/AppNotes/AN232B-01_BitBang.pdf
+
+        DTR is connected to SPIMISO (bit 4)
+        DSR is connected to RESET   (bit 5)
+        """
+        def write(b):
+            msg = cArray(1); msg[0]=b
+            self.f.write_data(msg, 1)
+
+        RESET, SPIMISO, NONE = 1<<5, 1<<4, 0x00
+        self.f.enable_bitbang((RESET|SPIMISO)&0xFF)
+        #write(~RESET&0xFF)
+        #sleep(2)
+        write(~(RESET|SPIMISO)&0xff)
+        sleep(.2)
+        write(~(SPIMISO)&0xff)
+        sleep(.2)
+        self.f.disable_bitbang()
 
     def verbose(self):
         self.isverbose = True
@@ -240,3 +273,19 @@ class Bootloader:
         ram.
         """
         return self.talk( 0x1F, 0x20, addr, len )[1:] # strip command status
+
+    def finish(self):
+        """ depending on the connected device, do a reset.
+        Switch to bitbang and toggle reset line.
+        """
+        if self.doreset:
+            def write(b):
+                msg = cArray(1); msg[0]=b
+                self.f.write_data(msg, 1)
+
+            RESET = 1<<5
+            self.f.enable_bitbang((RESET)&0xFF)
+            write(~(RESET)&0xff)
+            sleep(.2)
+            self.f.disable_bitbang()
+
