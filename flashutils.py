@@ -6,6 +6,7 @@ class JennicProtocol:
         self.lic_region    = range(0x00000038, 0x00000048)
         self.mac, self.lic = None, None
         self.isverbose     = None
+        self.preferedblocksize = None
         self.select_flash()
 
     def select_flash(self):

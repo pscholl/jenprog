@@ -62,7 +62,7 @@ elif options.mac or options.key:
         bl.write_license()
 
 elif len(args)!=1:
-    block,i,start = 0xf0,0,time()
+    block,i,start = bl.preferedblocksize or 0xf0,0,time()
     for addr in xrange(options.addr, options.addr+options.len, block):
         for byte in bl.read_flash(addr, block):
             stdout.write("%c"%byte)
@@ -82,8 +82,9 @@ else:
     size = file.tell()
     file.seek(0, 0)
 
-    # start reading the file
-    block,i,start = 0x80,0,time()
+    # start reading the file, 0x80 seems to be the only blocksize
+    # working for the jennic bootloader with certain flashtypes
+    block,i,start = bl.preferedblocksize or 0x80,0,time()
     data = file.read(block)
     addr = 0x00000000
 

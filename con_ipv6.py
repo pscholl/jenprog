@@ -8,6 +8,7 @@ class IPBootloader(JennicProtocol):
         af,typ,proto,name,sa = getaddrinfo(addr,port,AF_UNSPEC,SOCK_STREAM)[0]
         self.sock = socket(af,typ,proto)
         self.sock.connect(sa)
+        self.preferedblocksize=0xf0
         JennicProtocol.__init__(self)
 
     def talk(self, type, ans_type, addr=None, mlen=None, data=None):
@@ -36,8 +37,11 @@ class IPBootloader(JennicProtocol):
                 msg += pack('!%is'%len(data), "".join(map(chr,data)))
         msg += pack('!B', 0) #self.crc(msg, len))
 
+
+        if self.isverbose: print "-> %i"%len(msg)
         self.sock.send(msg)
         ans = self.sock.recv(1024)
+        if self.isverbose: print "<- %i"%len(ans)
         return map(ord,ans[2:-1])
 
     def finish(self):
