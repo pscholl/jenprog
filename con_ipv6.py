@@ -45,4 +45,7 @@ class IPBootloader(JennicProtocol):
         return map(ord,ans[2:-1])
 
     def finish(self):
+        """ send a special command which reset the remote target.
+        """
+        self.sock.send(pack('!BBIB', 7, 0x21, 0, 0))
         self.sock.close()
