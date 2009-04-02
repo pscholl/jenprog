@@ -6,9 +6,16 @@ ipv6. Furthermore it has a special mode for Ftdi-Chip Serial chip designs.
 
 == Installation ==
 
+  Just run:
+ $ python setup.py install
+
+  This should alert if the pyserial package is not installed. You can get it
+with:
+ $ easy_install pyserial
+
 == Usage ==
 
-Usage: jenprog [options]
+Usage: jenprog [options] <file>
 
 Options:
   -h, --help            show this help message and exit
@@ -37,6 +44,15 @@ WORD OF CAUTION:
    if your programming is stopped half-way mac and license key will be lost!
  * there are no sanity on the file itself, jenprog will happily write crap to
    jennics flash memory.
+
+  Standard cycle of reprogramming looks like this:
+
+ $ jenprog -s
+ flash: ST M25P10-A
+ mac: 0x00158d0000058448 license: 0x000000000000000000000
+
+ $ jenprog my-example-program.hex
+ 0%..10%..20%..30%..40%..50%..60%..70%..80%..90%..done - 2.55 kb/s - writing mac address and key..done
 
 === Putting the Jennic module into programming mode ===
 
