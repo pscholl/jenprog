@@ -1,0 +1,78 @@
+= Jenprog - simple bootloader for jennic chips =
+
+ Jenprog is a command line driven bootloader for jennic Wireless
+Microcontrollers. It supports bootloading through serial interfaces and over
+ipv6. Furthermore it has a special mode for Ftdi-Chip Serial chip designs.
+
+== Installation ==
+
+== Usage ==
+
+Usage: jenprog [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -a ADDR, --address=ADDR
+                        start reading at address
+  -l LEN, --len=LEN     number of bytes to read
+  -m MAC, --mac=MAC     reset the mac addr
+  -k KEY, --key=KEY     reset the license key
+  -v, --verbose         print send and received packets
+  -y, --verify          also verify after writing
+  -s, --show            show mac address and license key
+  -e, --erase           erasing the flash after reading mac and license key
+  -c CONN, --connection=CONN
+                        connection implementation (serial,ipv6,ftdi) [default:
+                        serial]
+  -t TARGET, --target=TARGET
+                        target for connection
+
+  Calling jenprog without any file argument will read the contents of the flash
+to standard output. Calling it with a file argument will delete the flash and
+reprogram with the supplied file.
+
+WORD OF CAUTION:
+ * be sure to read your licence key and mac address prior to any attempt to
+   reprogram the jennic as it will be deleted and reprogrammed every cycle. So
+   if your programming is stopped half-way mac and license key will be lost!
+ * there are no sanity on the file itself, jenprog will happily write crap to
+   jennics flash memory.
+
+=== Putting the Jennic module into programming mode ===
+
+  On certain type of boards you have to put the module into programming mode,
+prior to reprogramming the moduls. On the jennic demokit boards this is done by
+pressing 'reset' and 'program' together and releasing the 'reset' button prior
+to the 'program' button.
+
+  When programming over the ipv6 connection this is not needed as this will be
+done automatically.
+
+=== Configuring connection ===
+
+  Jenprog supports three way of connecting to your device. Through serial ports,
+ipv6 and through ftdi chips. The Type of connection is determined by the '-c'
+parameter. The target parameter depends on the chosen connection. For serial
+connection this is the serial port to use, for ipv6 this is the ip-address of
+your device, for ftdi-based connections there is no target. Serial connection is
+the default, for example to program through the second USB serial connector, you
+could use:
+
+ $ jenprog -c /dev/ttyUSB1 <program-file.hex>
+ 0%..10%..20%..30%..40%..50%..60%..70%..80%..90%..done - 2.55 kb/s - writing mac address and key..done
+
+=== Showing/Resetting the mac address and license key ===
+
+ Jennic modules store their ieee802.15.4 mac address in a special region in the
+flash. Futhermore the license key for their Zigbee stack can also be found
+there. To show them you need to put the Jennic module into programming mode.
+Afterwards call jenprog with your configuration with '-s' parameter. For example
+over ipv6:
+
+ $ jenprog -c ipv6 -t <ip-address> -s
+ flash: ST M25P10-A
+ mac: 0x00158d0000058448 license: 0x000000000000000000000
+
+which will output the type of flash this module includes, its mac address and
+its license key.
+
