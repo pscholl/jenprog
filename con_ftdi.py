@@ -192,4 +192,5 @@ class FtdiBootloader(JennicProtocol):
             sleep(1)
             write(~(NONE)&0xff)
             self.f.disable_bitbang()
+        self.usb_close()
 
