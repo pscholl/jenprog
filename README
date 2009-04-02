@@ -45,7 +45,7 @@ WORD OF CAUTION:
  * there are no sanity on the file itself, jenprog will happily write crap to
    jennics flash memory.
 
-  Standard cycle of reprogramming looks like this:
+  Standard cycle of reprogramming looks on linux like this:
 
  $ jenprog -s
  flash: ST M25P10-A
@@ -53,6 +53,9 @@ WORD OF CAUTION:
 
  $ jenprog my-example-program.hex
  0%..10%..20%..30%..40%..50%..60%..70%..80%..90%..done - 2.55 kb/s - writing mac address and key..done
+
+  For win32 this should be something like:
+ $ jenprog -t COM1 my-example-program.hex
 
 === Putting the Jennic module into programming mode ===
 
@@ -66,13 +69,12 @@ done automatically.
 
 === Configuring connection ===
 
-  Jenprog supports three way of connecting to your device. Through serial ports,
-ipv6 and through ftdi chips. The Type of connection is determined by the '-c'
-parameter. The target parameter depends on the chosen connection. For serial
-connection this is the serial port to use, for ipv6 this is the ip-address of
-your device, for ftdi-based connections there is no target. Serial connection is
-the default, for example to program through the second USB serial connector, you
-could use:
+  Jenprog supports two ways of connecting to your device. Through serial ports
+and ipv6 . The Type of connection is determined by the '-c' parameter. The
+target parameter depends on the chosen connection. For serial connection this is
+the serial port to use, for ipv6 this is the ip-address of your device.  Serial
+connection is the default, for example to program through the second USB serial
+connector, you could use:
 
  $ jenprog -c /dev/ttyUSB1 <program-file.hex>
  0%..10%..20%..30%..40%..50%..60%..70%..80%..90%..done - 2.55 kb/s - writing mac address and key..done
