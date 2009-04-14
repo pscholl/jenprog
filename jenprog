@@ -21,7 +21,7 @@ parser.add_option('-s', '--show', dest='show', action='store_true',
                   help='show mac address and license key')
 parser.add_option('-e', '--erase', dest='erase', action='store_true',
                   help='erasing the flash after reading mac and license key')
-parser.add_option('-c', '--connection', type='choice', dest='conn', default='serial', choices=conns[:-1],
+parser.add_option('-c', '--connection', type='choice', dest='conn', default='serial', choices=conns,
                   help='connection implementation ('+",".join(conns[:-1])+') [default: %default]')
 parser.add_option('-t', '--target', type='string', help='target for connection', dest='target')
 
