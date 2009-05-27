@@ -74,7 +74,7 @@ class FtdiBootloader(JennicProtocol):
 
         def write(b):
             msg = cArray(1); msg[0]=b;
-            print self.f.write_data(msg, 1)
+            self.f.write_data(msg, 1)
 
         self.f.enable_bitbang(SPIMISO|RESET)
         write(0x00)
