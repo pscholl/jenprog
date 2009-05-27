@@ -43,6 +43,14 @@ class FtdiBootloader(JennicProtocol):
 
             self.enterprogrammingmode()
             self.doreset = 1
+
+            # clear crap
+            self.f.usb_reset()
+            self.f.usb_purge_buffers()
+            self.f.usb_purge_buffers()
+            crap = cArray(1024)
+            self.f.read_data(crap, 1024)
+
         except:
             # Jennics usb2serial cable
             self.f.usb_open(0x0403, 0x6001)
@@ -71,18 +79,19 @@ class FtdiBootloader(JennicProtocol):
         DTR is connected to SPIMISO (bit 4)
         DSR is connected to RESET   (bit 5)
         """
+        RESET, SPIMISO, NONE = 1<<5, 1<<4, 0x00
+
         def write(b):
-            msg = cArray(1); msg[0]=b
+            msg = cArray(1); msg[0]=b;
             self.f.write_data(msg, 1)
 
-        RESET, SPIMISO, NONE = 1<<5, 1<<4, 0x00
-        self.f.enable_bitbang((RESET|SPIMISO)&0xFF)
-        #write(~RESET&0xFF)
-        #sleep(2)
-        write(~(RESET|SPIMISO)&0xff)
-        sleep(1.5)
-        write(~(SPIMISO)&0xff)
-        sleep(1.5)
+        self.f.enable_bitbang(SPIMISO|RESET)
+        write(0x00)
+        sleep(.1)
+        self.f.disable_bitbang()
+        self.f.enable_bitbang(SPIMISO)
+        write(0x00)
+        sleep(.1)
         self.f.disable_bitbang()
 
     def talk(self, type, ans_type, addr=None, mlen=None, data=None):
@@ -187,10 +196,9 @@ class FtdiBootloader(JennicProtocol):
                 self.f.write_data(msg, 1)
 
             RESET, NONE = 1<<5, 0x00
-            self.f.enable_bitbang((RESET)&0xFF)
-            write(~(RESET)&0xff)
-            sleep(1)
-            write(~(NONE)&0xff)
+            self.f.enable_bitbang(RESET)
+            write(0x00)
+            sleep(.1)
             self.f.disable_bitbang()
         self.usb_close()
 
