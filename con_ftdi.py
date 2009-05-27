@@ -33,28 +33,19 @@ class FtdiBootloader(JennicProtocol):
         try:
             # Teco usbbridge
             self.f.usb_open(0x0403, 0xcc40)
-
-            # clear crap
-            self.f.usb_reset()
-            self.f.usb_purge_buffers()
-            self.f.usb_purge_buffers()
-            crap = cArray(1024)
-            self.f.read_data(crap, 1024)
-
-            self.enterprogrammingmode()
-            self.doreset = 1
-
-            # clear crap
-            self.f.usb_reset()
-            self.f.usb_purge_buffers()
-            self.f.usb_purge_buffers()
-            crap = cArray(1024)
-            self.f.read_data(crap, 1024)
-
         except:
             # Jennics usb2serial cable
             self.f.usb_open(0x0403, 0x6001)
-            self.doreset = 0
+
+        # clear crap
+        self.f.usb_reset()
+        self.f.usb_purge_buffers()
+        self.f.usb_purge_buffers()
+        crap = cArray(1024)
+        self.f.read_data(crap, 1024)
+
+        self.enterprogrammingmode()
+        self.doreset = 1
 
         # clear crap
         self.f.usb_reset()
@@ -83,7 +74,7 @@ class FtdiBootloader(JennicProtocol):
 
         def write(b):
             msg = cArray(1); msg[0]=b;
-            self.f.write_data(msg, 1)
+            print self.f.write_data(msg, 1)
 
         self.f.enable_bitbang(SPIMISO|RESET)
         write(0x00)
