@@ -9,16 +9,22 @@ class IPBootloader(JennicProtocol):
         self.sock = socket(af,typ,proto)
         self.sock.connect(sa)
         JennicProtocol.__init__(self)
-        self.preferedblocksize=0xf0
+        self.preferedblocksize=0x1f0
+        self.addr=0x00
 
-    #def write_flash(self, addr, list):
-    #    print len(list)
-    #    self.talk( 0x2e, addr=len(list) )
-    #    written = 0
-    #    while written < len(list):
-    #        written += self.sock.send(list[written:])
-    #        print written
-    #    #status = self.talk( 0x09, 0x0A, addr, data=list)
+    def write_init(self, flash_image_size):
+        self.talk( 0x2e, addr=flash_image_size )
+        self.image_size = flash_image_size
+        self.addr = 0
+        print flash_image_size
+
+    def write2_flash(self, addr, block):
+        assert self.addr==addr, "%i, %i"%(self.addr, addr)
+        self.addr += self.sock.send(block)
+
+        if self.addr==self.image_size and\
+           unpack("BBBB", self.sock.recv(4))[1]!=47:
+            raise Exception("protocol error")
 
     def talk(self, type, ans_type=None, addr=None, mlen=None, data=None):
         """ executes one speak-reply cycle

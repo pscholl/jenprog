@@ -2,6 +2,7 @@
 from optparse import *
 from time import time
 from sys import stdout, stderr
+from os import SEEK_END, SEEK_SET
 
 conns  = ('serial', 'ipv6', 'ftdi')
 parser = OptionParser()
@@ -78,9 +79,9 @@ else:
     file = open(args[0], "rb")
 
     # read the file size
-    file.seek(0, 2)
+    file.seek(0,SEEK_END)
     size = file.tell()
-    file.seek(0, 0)
+    file.seek(0,SEEK_SET)
 
     # start reading the file, 0x80 seems to be the only blocksize
     # working for the jennic bootloader with certain flashtypes
@@ -92,8 +93,16 @@ else:
     # its opertation.
     bl.erase_flash()
 
+    # issue a write_init command if the boot loader supports
+    # that.
+    if hasattr(bl, 'write_init'):
+        bl.write_init(size)
+
     while len(data) != 0:
-        bl.write_flash(addr, data)
+        if hasattr(bl, 'write2_flash'):
+            bl.write2_flash(addr, data)
+        else:
+            bl.write_flash(addr, data)
         addr += len(data)
         data  = file.read(block)
 
