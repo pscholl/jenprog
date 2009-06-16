@@ -16,7 +16,6 @@ class IPBootloader(JennicProtocol):
         self.talk( 0x2e, addr=flash_image_size )
         self.image_size = flash_image_size
         self.addr = 0
-        print flash_image_size
 
     def write2_flash(self, addr, block):
         assert self.addr==addr, "%i, %i"%(self.addr, addr)
