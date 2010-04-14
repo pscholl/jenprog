@@ -11,7 +11,7 @@ class JennicProtocol:
 
     def select_flash(self):
         self.identify_flash()
-        assert self.flash_jennicid in (0x00, 0x01, 0x02), "unsupported flash type"
+        assert self.flash_jennicid in (0x00, 0x01, 0x02, 0x03), "unsupported flash type"
         status = self.talk(0x2C, 0x2D, data = [self.flash_jennicid])[0]
         assert status == 0, "could not select detected flash type was: %d"%status
 
@@ -35,6 +35,10 @@ class JennicProtocol:
             self.flash_manufacturer = "Atmel"
             self.flash_type         = "25F512"
             self.flash_jennicid     = 0x02
+        elif self.flash_manufacturer == 0x12 and self.flash_type == 0x12:
+            self.flash_manufacturer = "ST"
+            self.flash_type         = "M25P40"
+            self.flash_jennicid     = 0x03
         else:
             self.flash_manufacturer = "unknown"
             self.flash_type         = "unknown"
@@ -75,8 +79,8 @@ class JennicProtocol:
             self.mac = self.read_mac()
         if not self.lic:
             self.lic = self.read_license()
-        assert len(self.mac)==len(self.mac_region), "read mac addr too short"
-        assert len(self.lic)==len(self.lic_region), "read license too short"
+        #assert len(self.mac)==len(self.mac_region), "read mac addr too short"
+        #assert len(self.lic)==len(self.lic_region), "read license too short"
 
         assert self.talk( 0x07, 0x08 )[0] == 0, "erasing did not work"
 

@@ -1,0 +1,15 @@
+import sys
+import os
+
+PYCPPPATH  = os.path.join(sys.prefix, 'include', 'python%d.%d'%(sys.version_info[0], sys.version_info[1]))
+PYPLATPATH = filter(lambda x: "plat" in x, sys.path)[0]
+
+lib = SharedLibrary( target='_ftdi', source='ftdi.i'.split(),
+                     CPPPATH=['.', PYCPPPATH],
+                     SWIGFLAGS='-python -I/usr/include',
+                     SHLIBPREFIX='',
+                     LIBS='ftdi',
+                     CFLAGS='-g',
+                    )
+
+Alias('install', Install(PYPLATPATH, [lib, 'ftdi.py']))

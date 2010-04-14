@@ -5,11 +5,11 @@ from os import write
 
 class SerialBootloader(JennicProtocol):
     def __init__(self, devname):
-        self.DEFAULT_TIMEOUT = .1
-        self.MAX_TIMEOUT     = 2
+        self.DEFAULT_TIMEOUT = .2   # was .1
+        self.MAX_TIMEOUT     = 4    # was 2
         if devname==None: devname='/dev/ttyUSB0'
         self.ser = Serial(devname, 38400, timeout=.1, parity=PARITY_NONE,
-                           stopbits=1, bytesize=8, rtscts=1, dsrdtr=0)
+                           stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
         self.ser.open()
         JennicProtocol.__init__(self)
 

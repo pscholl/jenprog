@@ -1,5 +1,6 @@
 from socket import *
 from struct import *
+from time   import sleep
 from sys    import stdout, stderr
 from flashutils import JennicProtocol
 
@@ -9,7 +10,7 @@ class IPBootloader(JennicProtocol):
         self.sock = socket(af,typ,proto)
         self.sock.connect(sa)
         JennicProtocol.__init__(self)
-        self.preferedblocksize=0x1f0
+        self.preferedblocksize=0xff
         self.addr=0x00
 
     def write_init(self, flash_image_size):
@@ -20,6 +21,7 @@ class IPBootloader(JennicProtocol):
     def write2_flash(self, addr, block):
         assert self.addr==addr, "%i, %i"%(self.addr, addr)
         self.addr += self.sock.send(block)
+        #sleep(.5)
 
         if self.addr==self.image_size and\
            unpack("BBBB", self.sock.recv(4))[1]!=47:
