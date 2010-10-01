@@ -36,6 +36,7 @@ class SerialBootloader(JennicProtocol):
             n,ans = ord(self.ser.read(1)), ""
             while len(ans)<n: # TODO: problematic
                 ans += self.ser.read(n)
+
         except TypeError: # thrown when self.ser.read() gets nothing
             self.ser.timeout = self.MAX_TIMEOUT
             n,ans = ord(self.ser.read(1)), ""
