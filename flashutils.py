@@ -11,9 +11,13 @@ class JennicProtocol:
 
     def select_flash(self):
         self.identify_flash()
-        assert self.flash_jennicid in (0x00, 0x01, 0x02, 0x03), "unsupported flash type"
+        if not self.flash_jennicid in (0x00, 0x01, 0x02, 0x03):
+            print "unsupported flash type"
+            sys.exit(1)
         status = self.talk(0x2C, 0x2D, data = [self.flash_jennicid])[0]
-        assert status == 0, "could not select detected flash type was: %d"%status
+        if not status == 0:
+            print "could not select detected flash type was: %d"%status
+            sys.exit(1)
 
     def identify_flash(self):
         flash = self.talk(0x25, 0x26)
@@ -21,7 +25,9 @@ class JennicProtocol:
         self.flash_manufacturer = flash[1]
         self.flash_type         = flash[2]
 
-        assert self.flash_status == 0, "flash status != 0"
+        if not self.flash_status == 0:
+            print "flash status != 0"
+            sys.exit(0)
 
         if self.flash_manufacturer == 0x10 and self.flash_type == 0x10:
             self.flash_manufacturer = "ST"
@@ -31,7 +37,8 @@ class JennicProtocol:
             self.flash_manufacturer = "SST"
             self.flash_type         = "25VF010A"
             self.flash_jennicid     = 0x01
-        elif self.flash_manufacturer == 0x1f and self.flash_type == 0x60:
+        elif self.flash_manufacturer == 0x1f and (self.flash_type == 0x60\
+             or self.flash_type == 0x65):
             self.flash_manufacturer = "Atmel"
             self.flash_type         = "25F512"
             self.flash_jennicid     = 0x02
@@ -59,8 +66,9 @@ class JennicProtocol:
             if s[i:i+2] != "0x":
                 self.mac.append( int( s[i:i+2], 16 ) )
 
-        assert len(self.mac)==len(self.mac_region),\
-         "mac must be %i byte long"%len(self.mac_region)
+        if not len(self.mac)==len(self.mac_region):
+            print "mac must be %i byte long"%len(self.mac_region)
+            sys.exit(1)
 
     def set_license(self, s):
         self.lic = []
@@ -69,8 +77,9 @@ class JennicProtocol:
             if s[i:i+2] != "0x":
                 self.lic.append( int( s[i:i+2], 16 ) )
 
-        assert len(self.lic)==len(self.lic_region),\
-         "license must be %i byte long"%len(self.lic_region)
+        if not len(self.lic)==len(self.lic_region):
+            print "license must be %i byte long"%len(self.lic_region)
+            sys.exit(1)
 
     def erase_flash(self):
         """ read mac and license key prior to erasing
@@ -82,8 +91,13 @@ class JennicProtocol:
         #assert len(self.mac)==len(self.mac_region), "read mac addr too short"
         #assert len(self.lic)==len(self.lic_region), "read license too short"
 
-        assert self.talk( 0x0F, 0x10, data=[0x00] )[0] == 0, "disabling write protection failed"
-        assert self.talk( 0x07, 0x08 )[0] == 0, "erasing did not work"
+        if not self.talk( 0x0F, 0x10, data=[0x00] )[0] == 0:
+            print("disabling write protection failed")
+            sys.exit(1)
+
+        if not self.talk( 0x07, 0x08 )[0] == 0:
+            print("erasing did not work")
+            sys.exit(1)
 
     def read_mac(self):
         return self.read_flash(self.mac_region[0], len(self.mac_region))
