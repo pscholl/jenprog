@@ -42,7 +42,7 @@ class SerialBootloader(JennicProtocol):
         self.MAX_TIMEOUT     = 10
         if devname==None: devname='/dev/ttyUSB0'
         self.ser = Serial(devname, 38400, timeout=.1, parity=PARITY_NONE,
-                           stopbits=1, bytesize=8, rtscts=1, dsrdtr=0)
+                           stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
         self.ser.open()
         JennicProtocol.__init__(self)
 

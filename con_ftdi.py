@@ -60,8 +60,11 @@ class Ftdi:
         return Closure(self.context, eval("ftdi_%s"%name))
 
 class FtdiBootloader(JennicProtocol):
-    def __init__(self):
+    # use bitbang mode to jump into programming mode, see
+    # enterprogrammingmode
+    def __init__(self, RESET=5, SPIMISO=4):
         self.f = Ftdi()
+        self.RESET, self.SPIMISO, self.NONE = 1<<RESET, 1<<SPIMISO, 0x00
 
         try:
             # Teco usbbridge
@@ -103,17 +106,15 @@ class FtdiBootloader(JennicProtocol):
         DTR is connected to SPIMISO (bit 4)
         DSR is connected to RESET   (bit 5)
         """
-        RESET, SPIMISO, NONE = 1<<5, 1<<4, 0x00
-
         def write(b):
             msg = cArray(1); msg[0]=b;
             self.f.write_data(msg, 1)
 
-        self.f.enable_bitbang(SPIMISO|RESET)
+        self.f.enable_bitbang(self.SPIMISO|self.RESET)
         write(0x00)
         sleep(.1)
         self.f.disable_bitbang()
-        self.f.enable_bitbang(SPIMISO)
+        self.f.enable_bitbang(self.SPIMISO)
         write(0x00)
         sleep(.1)
         self.f.disable_bitbang()

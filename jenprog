@@ -37,7 +37,7 @@ from time import time
 from sys import stdout, stderr
 from os import SEEK_END, SEEK_SET
 
-conns  = ('serial', 'ipv6', 'ftdi')
+conns  = ('serial', 'ipv6', 'ftdi', 'ftdi_cable')
 parser = OptionParser()
 parser.add_option('-a', '--address', dest='addr', type='int',
                   help='start reading at address', metavar='ADDR', default=0x00000000)
@@ -70,6 +70,12 @@ elif options.conn=='ipv6':
 elif options.conn=='ftdi':
     import con_ftdi
     bl = con_ftdi.FtdiBootloader()
+elif options.conn=='ftdi_cable':
+    import con_ftdi
+    # for boards where
+    # RESET pin is connected to CTS (bitbang bit 3) line
+    # SPIMISO pin to RTS (bitbang bit 2) line
+    bl = con_ftdi.FtdiBootloader(RESET=2, SPIMISO=3)
 else:
     raise Exception('nahh')
 
