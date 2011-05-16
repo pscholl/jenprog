@@ -14,9 +14,12 @@ put the Jennic chip into reset over the DTR/DSR lines.
 with:
  $ easy_install pyserial
 
- If you with to use the ftdi connection, you also need to install the pyftdi
-library supplied with this project (please note that this lib has only been
-tested under linux):
+=== DTR/DSR line ftdi designs ===
+
+ This step is completly optional and you'll only need this if you have a design
+that puts the jennic into reset via DTR/DSR lines. For this you need to install
+the pyftdi library supplied with this project (please note that this lib has
+only been tested under linux):
  $ cd pyftdi/
  $ scons install
 
