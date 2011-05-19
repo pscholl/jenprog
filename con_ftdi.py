@@ -70,8 +70,12 @@ class FtdiBootloader(JennicProtocol):
             # Teco usbbridge
             self.f.usb_open(0x0403, 0xcc40)
         except:
-            # Jennics usb2serial cable
-            self.f.usb_open(0x0403, 0x6001)
+            try:
+                # FT232 chips
+                self.f.usb_open(0x0403, 0x6001)
+            except:
+                # FT2232 chips
+                self.f.usb_open(0x0403, 0x6010)
 
         # clear crap
         self.f.usb_reset()
@@ -112,11 +116,11 @@ class FtdiBootloader(JennicProtocol):
 
         self.f.enable_bitbang(self.SPIMISO|self.RESET)
         write(0x00)
-        sleep(.1)
+        sleep(.2)
         self.f.disable_bitbang()
         self.f.enable_bitbang(self.SPIMISO)
         write(0x00)
-        sleep(.1)
+        sleep(.2)
         self.f.disable_bitbang()
 
     def talk(self, type, ans_type, addr=None, mlen=None, data=None):

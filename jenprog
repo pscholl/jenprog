@@ -37,7 +37,7 @@ from time import time
 from sys import stdout, stderr
 from os import SEEK_END, SEEK_SET
 
-conns  = ('serial', 'ipv6', 'ftdi', 'ftdi_cable')
+conns  = ('serial', 'ipv6', 'ftdi')
 parser = OptionParser()
 parser.add_option('-a', '--address', dest='addr', type='int',
                   help='start reading at address', metavar='ADDR', default=0x00000000)
@@ -58,6 +58,10 @@ parser.add_option('-e', '--erase', dest='erase', action='store_true',
 parser.add_option('-c', '--connection', type='choice', dest='conn', default='serial', choices=conns,
                   help='connection implementation ('+",".join(conns)+') [default: %default]')
 parser.add_option('-t', '--target', type='string', help='target for connection', dest='target')
+parser.add_option('--reset-pin', type='int', help='pin number of reset line for ftdi-type connections (default=5)',
+                  default=5, dest='RESET')
+parser.add_option('--spimiso-pin', type='int', help='pin number of spimiso line for ftdi-type connections (default=4)',
+                  default=4, dest='SPIMISO')
 
 (options, args) = parser.parse_args()
 
@@ -69,13 +73,7 @@ elif options.conn=='ipv6':
     bl = con_ipv6.IPBootloader(options.target)
 elif options.conn=='ftdi':
     import con_ftdi
-    bl = con_ftdi.FtdiBootloader()
-elif options.conn=='ftdi_cable':
-    import con_ftdi
-    # for boards where
-    # RESET pin is connected to CTS (bitbang bit 3) line
-    # SPIMISO pin to RTS (bitbang bit 2) line
-    bl = con_ftdi.FtdiBootloader(RESET=2, SPIMISO=3)
+    bl = con_ftdi.FtdiBootloader(RESET=options.RESET, SPIMISO=options.SPIMISO)
 else:
     raise Exception('nahh')
 
