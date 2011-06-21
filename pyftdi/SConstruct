@@ -1,15 +1,15 @@
 import sys
 import os
 
-PYCPPPATH  = os.path.join(sys.prefix, 'include', 'python%d.%d'%(sys.version_info[0], sys.version_info[1]))
+env = Environment()
+env.ParseConfig('pkg-config --libs --cflags libftdi python-%d.%d'%(sys.version_info[0], sys.version_info[1]))
+
 PYPLATPATH = filter(lambda x: "plat" in x, sys.path)[0]
 
-lib = SharedLibrary( target='_ftdi', source='ftdi.i'.split(),
-                     CPPPATH=['.', PYCPPPATH],
+lib = env.SharedLibrary( target='_ftdi', source='ftdi.i'.split(),
+                     CPPPATH=['.', '$CPPPATH'],
                      SWIGFLAGS='-python -I/usr/include',
                      SHLIBPREFIX='',
-                     LIBS='ftdi',
-                     CFLAGS='-g',
                     )
 
-Alias('install', Install(PYPLATPATH, [lib, 'ftdi.py']))
+env.Alias('install', env.Install(PYPLATPATH, [lib, 'ftdi.py']))
