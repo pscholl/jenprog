@@ -123,9 +123,9 @@ class JennicProtocol:
         #assert len(self.mac)==len(self.mac_region), "read mac addr too short"
         #assert len(self.lic)==len(self.lic_region), "read license too short"
 
-        if not self.talk( 0x0F, 0x10, data=[0x00] )[0] == 0:
-            print("disabling write protection failed")
-            sys.exit(1)
+        #if not self.talk( 0x0F, 0x10, data=[0x00] )[0] == 0:
+        #    print("disabling write protection failed")
+        #    sys.exit(1)
 
         if not self.talk( 0x07, 0x08 )[0] == 0:
             print("erasing did not work")

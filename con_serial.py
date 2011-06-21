@@ -35,6 +35,8 @@ from serial import *
 from flashutils import JennicProtocol
 from struct import pack
 from os import write
+from sys import stdout,exit
+from time import sleep
 
 class SerialBootloader(JennicProtocol):
     def __init__(self, devname):
@@ -44,6 +46,17 @@ class SerialBootloader(JennicProtocol):
         self.ser = Serial(devname, 38400, timeout=.1, parity=PARITY_NONE,
                            stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
         self.ser.open()
+
+        # change baudrate, re-open serial port
+        #print self.talk(0x27, 0x28, 1)
+        self.ser.write(pack("<BBBB", 3,0x27,1,self.crc([3,0x27,1],3)))
+        self.ser.read(3)
+
+        self.ser.close()
+        self.ser = Serial(devname, 1000000, timeout=.1, parity=PARITY_NONE,
+                          stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
+        self.ser.open()
+
         JennicProtocol.__init__(self)
 
     def talk(self, type, anstype, addr=None, mlen=None, data=None):
@@ -62,6 +75,9 @@ class SerialBootloader(JennicProtocol):
             else:
                 msg += pack('<%is'%len(data), "".join(map(chr,data)))
         msg += pack('<B', self.crc(map(ord,msg), len(msg)))
+
+        if anstype == None:
+            return []
 
         try:
             self.ser.timeout = self.DEFAULT_TIMEOUT
