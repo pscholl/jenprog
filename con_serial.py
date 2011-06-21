@@ -35,6 +35,8 @@ from serial import *
 from flashutils import JennicProtocol
 from struct import pack
 from os import write
+from sys import stdout,exit
+from time import sleep
 
 class SerialBootloader(JennicProtocol):
     def __init__(self, devname):
@@ -43,7 +45,16 @@ class SerialBootloader(JennicProtocol):
         if devname==None: devname='/dev/ttyUSB0'
         self.ser = Serial(devname, 38400, timeout=.1, parity=PARITY_NONE,
                            stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
-        self.ser.open()
+
+        # switch to programming mode for boards that support it, atm
+        # there is the jnode and jbee platform
+        self.ser.setDTR(0); sleep(.01); self.ser.setDTR(1); sleep(.2)
+
+        # switch to maximum baudrate
+        self.ser.write(pack("<BBBB", 3,0x27,1,self.crc([3,0x27,1],3)))
+        self.ser.read(3)
+        self.ser.setBaudrate(1000000)
+
         JennicProtocol.__init__(self)
 
     def talk(self, type, anstype, addr=None, mlen=None, data=None):
@@ -63,6 +74,9 @@ class SerialBootloader(JennicProtocol):
                 msg += pack('<%is'%len(data), "".join(map(chr,data)))
         msg += pack('<B', self.crc(map(ord,msg), len(msg)))
 
+        if anstype == None:
+            return []
+
         try:
             self.ser.timeout = self.DEFAULT_TIMEOUT
             self.ser.write(msg)
@@ -77,3 +91,8 @@ class SerialBootloader(JennicProtocol):
                 ans += self.ser.read(n)
         return map(ord,ans[1:-1])
 
+    def finish(self):
+        """ starts the execution by resetting the jennic modules.
+        """
+        self.ser.setDTR(0); sleep(.01); self.ser.setDTR(1); sleep(.2)
+        self.ser.close()
