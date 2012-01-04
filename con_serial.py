@@ -92,7 +92,10 @@ class SerialBootloader(JennicProtocol):
         return map(ord,ans[1:-1])
 
     def finish(self):
-        """ starts the execution by resetting the jennic modules.
-        """
-        self.ser.setDTR(0); sleep(.01); self.ser.setDTR(1); sleep(.2)
+        """ executes a reset sequence to restart the jennic module """
+        self.ser.setDTR(0)
+        sleep(.2)
+        self.ser.setDTR(1)
+        sleep(.01)
+        self.ser.setDTR(0)
         self.ser.close()

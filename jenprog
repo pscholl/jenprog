@@ -90,7 +90,6 @@ if options.show or options.erase:
     for b in bl.read_license(): stdout.write("%02x"%b)
     stdout.write("\n")
     if options.erase: bl.erase_flash()
-    bl.finish()
 
 elif options.mac or options.key:
     if options.mac:
@@ -99,7 +98,6 @@ elif options.mac or options.key:
     if options.key:
         bl.set_license(options.key)
         bl.write_license()
-    bl.finish()
 
 elif len(args)!=1:
     block,i,start = bl.preferedblocksize or 0xf0,0,time()
@@ -113,7 +111,6 @@ elif len(args)!=1:
 
     kb,sec  = options.len/1000., (time()-start)
     stderr.write("done - %0.2f kb/s\n"%(kb/sec))
-    bl.finish()
 
 else:
     file = open(args[0], "rb")
@@ -156,9 +153,11 @@ else:
     stderr.write("- writing mac address and key..")
     bl.write_mac()
     bl.write_license()
-    bl.finish()
     stderr.write("done\n")
 
     if options.verify:
         raise Exception, "not implemented"
+
+# this restarts the module on some programmers
+bl.finish()
 
