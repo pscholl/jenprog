@@ -48,7 +48,7 @@ class SerialBootloader(JennicProtocol):
         sys.stdout.flush()
         while True:
             f=-1
-            try: f=open("/dev/ttyACM0")
+            try: f=open(devname)
             except IOError: pass
             else: break
         sys.stdout.write("done\n")
