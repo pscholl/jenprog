@@ -34,7 +34,7 @@
 from serial import *
 from flashutils import JennicProtocol
 from struct import pack
-from os import write
+from os import write,path
 from sys import stdout,exit
 from time import sleep
 
@@ -43,17 +43,41 @@ class SerialBootloader(JennicProtocol):
         self.DEFAULT_TIMEOUT = .2
         self.MAX_TIMEOUT     = 10
         if devname==None: devname='/dev/ttyUSB0'
-        self.ser = Serial(devname, 38400, timeout=.1, parity=PARITY_NONE,
+
+        sys.stdout.write("waiting for %s.."%devname)
+        sys.stdout.flush()
+        while True:
+            f=-1
+            try: f=open("/dev/ttyACM0")
+            except IOError: pass
+            else: break
+        sys.stdout.write("done\n")
+
+        self.ser = Serial(devname, 38400, timeout=.01, parity=PARITY_NONE,
                            stopbits=1, bytesize=8, rtscts=0, dsrdtr=0)
+
+        # make sure that the baudrate is set!
+        self.ser.setBaudrate(115200)
+        self.ser.setBaudrate(38400)
 
         # switch to programming mode for boards that support it, atm
         # there is the jnode and jbee platform
         self.ser.setDTR(0); sleep(.01); self.ser.setDTR(1); sleep(.2)
 
+        # read everything that is clogging up the input buffer, until we can
+        # be sure that we are in programming mode.
+        sys.stdout.write("waiting until queues are emtpy..")
+        sys.stdout.flush()
+        while self.ser.inWaiting():
+            self.ser.read(self.ser.inWaiting())
+            sleep(.5)
+        sys.stdout.write("done\n")
+
         # switch to maximum baudrate
         self.ser.write(pack("<BBBB", 3,0x27,1,self.crc([3,0x27,1],3)))
         self.ser.read(3)
         self.ser.setBaudrate(1000000)
+
         JennicProtocol.__init__(self)
 
     def talk(self, type, anstype, addr=None, mlen=None, data=None):
@@ -91,10 +115,6 @@ class SerialBootloader(JennicProtocol):
         return map(ord,ans[1:-1])
 
     def finish(self):
-        """ executes a reset sequence to restart the jennic module """
-        self.ser.setDTR(0)
-        sleep(.2)
-        self.ser.setDTR(1)
-        sleep(.01)
-        self.ser.setDTR(0)
+        """ starts the execution by resetting the jennic modules. """
+        self.ser.setDTR(0); sleep(.01); self.ser.setDTR(1);
         self.ser.close()

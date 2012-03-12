@@ -58,7 +58,7 @@ class JennicProtocol:
         self.flash_type         = flash[2]
 
         if not self.flash_status == 0:
-            print "flash status != 0"
+            print "flash status != 0 (%c)"%self.flash_status
             sys.exit(0)
 
         if self.flash_manufacturer == 0x10 and self.flash_type == 0x10:
